@@ -65,6 +65,12 @@ export function EntityDrawer({ entityId, onClose }: EntityDrawerProps) {
 
   const entity = entityDetails.entity;
 
+  // Helper function to get entity name by ID
+  const getEntityNameById = (id: string): string => {
+    const relatedEntity = entityDetails.related_entities?.find(e => e.id === id);
+    return relatedEntity?.name || id; // fallback to ID if name not found
+  };
+
   return (
     <div className={styles.drawerOverlay} onClick={onClose}>
       <div className={styles.entityDrawer} onClick={(e) => e.stopPropagation()}>
@@ -84,7 +90,7 @@ export function EntityDrawer({ entityId, onClose }: EntityDrawerProps) {
           {/* Basic Info */}
           <div className={styles.section}>
             <h3>📝 Description</h3>
-            <p>{entity.description || 'No description available'}</p>
+            <h4>{entity.description || 'No description available'}</h4>
           </div>
 
           {/* Aliases */}
@@ -141,7 +147,7 @@ export function EntityDrawer({ entityId, onClose }: EntityDrawerProps) {
                       {rel.relation_type}
                     </div>
                     <div className={styles.relationshipTarget}>
-                      Target: {rel.target === entity.id ? rel.source : rel.target}
+                      Target: {getEntityNameById(rel.target === entity.id ? rel.source_id : rel.target_id)}
                     </div>
                     <div className={styles.relationshipConfidence}>
                       {(rel.confidence * 100).toFixed(1)}%

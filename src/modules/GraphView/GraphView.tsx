@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGraphData } from './graphView.queries';
 import { EntityDrawer } from '../EntityDrawer/EntityDrawer';
 import styles from './GraphView.module.scss';
@@ -6,6 +6,7 @@ import styles from './GraphView.module.scss';
 export function GraphView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEntityTypes, setSelectedEntityTypes] = useState<string[]>([]);
+  const [selectedRelationTypes, setSelectedRelationTypes] = useState<string[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
   
   const { 
@@ -18,10 +19,45 @@ export function GraphView() {
     max_edges: 500,
   });
 
+  // Extract unique entity types from actual data
+  const availableEntityTypes = useMemo(() => {
+    if (!data?.nodes) return [];
+    return [...new Set(data.nodes.map(node => node.type))];
+  }, [data?.nodes]);
+
+  // Extract unique relation types from actual data
+  const availableRelationTypes = useMemo(() => {
+    if (!data?.edges) return [];
+    return [...new Set(data.edges.map(edge => edge.relation_type))];
+  }, [data?.edges]);
+
+  // Group entities by type
+  const entitiesByType = useMemo(() => {
+    if (!data?.nodes) return {};
+    
+    // Filter by search query first
+    const filteredNodes = data.nodes.filter(node => 
+      node.name && node.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    // Filter by selected entity types
+    const typeFilteredNodes = selectedEntityTypes.length > 0 
+      ? filteredNodes.filter(node => selectedEntityTypes.includes(node.type))
+      : filteredNodes;
+    
+    // Group by type
+    return typeFilteredNodes.reduce((acc, node) => {
+      if (!acc[node.type]) {
+        acc[node.type] = [];
+      }
+      acc[node.type].push(node);
+      return acc;
+    }, {} as Record<string, typeof data.nodes>);
+  }, [data?.nodes, searchQuery, selectedEntityTypes]);
+
   // Mock functions
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    console.log('Search:', query);
   };
 
   const handleEntityTypeFilter = (type: string, checked: boolean) => {
@@ -30,17 +66,22 @@ export function GraphView() {
     } else {
       setSelectedEntityTypes(prev => prev.filter(t => t !== type));
     }
-    console.log('Filter entity type:', type, checked);
+  };
+
+  const handleRelationTypeFilter = (type: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRelationTypes(prev => [...prev, type]);
+    } else {
+      setSelectedRelationTypes(prev => prev.filter(t => t !== type));
+    }
   };
 
   const handleNodeClick = (nodeId: string) => {
     setSelectedEntity(nodeId);
-    console.log('Node clicked:', nodeId);
   };
 
   const handleCloseDrawer = () => {
     setSelectedEntity(null);
-    console.log('Drawer closed');
   };
 
   if (isLoading) {
@@ -117,7 +158,7 @@ export function GraphView() {
           <div className={styles.sidebarSection}>
             <h3>🎯 Entity Types</h3>
             <div className={styles.filterList}>
-              {(data.available_entity_types || []).map(type => (
+              {availableEntityTypes.map(type => (
                 <label key={type} className={styles.filterItem}>
                   <input
                     type="checkbox"
@@ -133,18 +174,16 @@ export function GraphView() {
           <div className={styles.sidebarSection}>
             <h3>🔗 Relations</h3>
             <div className={styles.filterList}>
-              <label className={styles.filterItem}>
-                <input type="checkbox" defaultChecked />
-                <span>IS</span>
-              </label>
-              <label className={styles.filterItem}>
-                <input type="checkbox" defaultChecked />
-                <span>HAS</span>
-              </label>
-              <label className={styles.filterItem}>
-                <input type="checkbox" defaultChecked />
-                <span>RELATED_TO</span>
-              </label>
+              {availableRelationTypes.map(type => (
+                <label key={type} className={styles.filterItem}>
+                  <input
+                    type="checkbox"
+                    checked={selectedRelationTypes.includes(type)}
+                    onChange={(e) => handleRelationTypeFilter(type, e.target.checked)}
+                  />
+                  <span>{type}</span>
+                </label>
+              ))}
             </div>
           </div>
         </div>
@@ -152,18 +191,27 @@ export function GraphView() {
         {/* Graph Canvas */}
         <div className={styles.graphCanvas}>
           <div className={styles.graphPlaceholder}>
-            <h2>📊 Graph Visualization</h2>
-            <p>D3.js graph will be rendered here</p>
-            <div className={styles.mockNodes}>
-              {(data.nodes || []).slice(0, 10).map(node => (
-                <div 
-                  key={node.id} 
-                  className={styles.mockNode}
-                  onClick={() => handleNodeClick(node.id)}
-                  data-type={node.type}
-                >
-                  <strong>{node.name}</strong>
-                  <small>{node.type}</small>
+            <h2>📊 Entities by Type</h2>
+            <p>Grouped by entity types</p>
+            <div className={styles.entitiesByType}>
+              {Object.entries(entitiesByType).map(([type, entities]) => (
+                <div key={type} className={styles.entityTypeColumn}>
+                  <h3 className={styles.columnHeader} data-type={type}>
+                    {type} ({entities.length})
+                  </h3>
+                  <div className={styles.entityList}>
+                    {entities.map(node => (
+                      <div 
+                        key={node.id} 
+                        className={styles.entityItem}
+                        onClick={() => handleNodeClick(node.id)}
+                        data-type={node.type}
+                      >
+                        <strong>{node.name}</strong>
+                        <small>{(node.confidence * 100).toFixed(0)}%</small>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

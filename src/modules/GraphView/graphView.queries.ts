@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { graphService } from '../../api/services/graphService';
 
 export const GRAPH_VIEW_QUERY_KEYS = {
