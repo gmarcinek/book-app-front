@@ -311,6 +311,7 @@
   align-items: center;
   justify-content: flex-start;
   height: 100%;
+  max-width: 100%;
   text-align: center;
   padding: 20px;
   
@@ -329,6 +330,7 @@
 /* Entities by Type Layout */
 .entitiesByType {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   justify-content: flex-start;
   align-items: flex-start;
@@ -343,7 +345,8 @@
   display: flex;
   flex-direction: column;
   min-width: 250px;
-  max-width: 300px;
+  max-width: 350px;
+  width: 100%;
   background: var(--bg-secondary, rgba(55, 65, 81, 0.4));
   border-radius: var(--border-radius-md, 8px);
   border: 1px solid var(--border-secondary, rgba(75, 85, 99, 0.5));
