@@ -1,14 +1,28 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { GraphView } from '../modules/GraphView/GraphView';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <GraphView />,
+    element: <Navigate to="/graph" replace />,
   },
   {
     path: '/graph',
     element: <GraphView />,
+    children: [
+      {
+        path: '',
+        element: <Navigate to="tiles" replace />,
+      },
+      {
+        path: 'tiles',
+        element: null, // będzie obsłużone przez GraphView
+      },
+      {
+        path: 'network', 
+        element: null, // będzie obsłużone przez GraphView
+      },
+    ],
   },
   {
     path: '*',
