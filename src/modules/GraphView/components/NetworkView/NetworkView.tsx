@@ -72,19 +72,19 @@ export function NetworkView() {
         const simulation = d3.forceSimulation<GraphNode>(nodes)
             .force('link', d3.forceLink<GraphNode, GraphLink>(links)
                 .id(d => d.id)
-                .distance(100)
+                .distance(500)
             )
-            .force('charge', d3.forceManyBody<GraphNode>().strength(-300))
+            .force('charge', d3.forceManyBody<GraphNode>().strength(-500))
             .force('center', d3.forceCenter(width / 2, height / 2))
-            .force('collision', d3.forceCollide<GraphNode>(NODE_RADIUS + 5))
-            .force('boundary', () => {
-                nodes.forEach(node => {
-                    if (node.x !== undefined && node.y !== undefined) {
-                        node.x = Math.max(PADDING, Math.min(width - PADDING, node.x));
-                        node.y = Math.max(PADDING, Math.min(height - PADDING, node.y));
-                    }
-                });
-            });
+            .force('collision', d3.forceCollide<GraphNode>(NODE_RADIUS + 20))
+            // .force('boundary', () => {
+            //     nodes.forEach(node => {
+            //         if (node.x !== undefined && node.y !== undefined) {
+            //             node.x = Math.max(PADDING, Math.min(width - PADDING, node.x));
+            //             node.y = Math.max(PADDING, Math.min(height - PADDING, node.y));
+            //         }
+            //     });
+            // });
 
         simulationRef.current = simulation;
 
